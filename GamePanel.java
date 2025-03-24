@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
+
     private boolean isPlaying = false;
     private int currentScore = 0;
     private int bricksRemaining = 21;
@@ -106,9 +107,13 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                         Rectangle ballRect = new Rectangle(ballX, ballY, 20, 20);
 
                         if (ballRect.intersects(brickRect)) {
-                            brickLayout.setBrick(0, i, j);
-                            bricksRemaining--;
-                            currentScore += 5;
+                            if (brickLayout.bricks[i][j] != -1) { // Not an obstacle
+                                brickLayout.hitBrick(i, j);
+                                if (brickLayout.bricks[i][j] == 0) {
+                                    bricksRemaining--;
+                                    currentScore += 5;
+                                }
+                            }
 
                             if (ballX + 19 <= brickRect.x || ballX + 1 >= brickRect.x + brickRect.width) {
                                 ballXSpeed = -ballXSpeed;
@@ -132,7 +137,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     }
 
     @Override
-    public void keyTyped(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {
+    }
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -176,5 +182,6 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {}
+    public void keyReleased(KeyEvent e) {
+    }
 }

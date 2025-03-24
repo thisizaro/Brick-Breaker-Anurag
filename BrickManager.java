@@ -12,7 +12,14 @@ public class BrickManager {
         bricks = new int[rows][cols];
         for (int i = 0; i < bricks.length; i++) {
             for (int j = 0; j < bricks[0].length; j++) {
-                bricks[i][j] = 1;
+                double rand = Math.random();
+                if (rand < 0.2) {
+                    bricks[i][j] = -1; // 20% chance of being an obstacle
+                } else if (rand < 0.5) {
+                    bricks[i][j] = 2; // 30% chance of being a strong brick
+                } else {
+                    bricks[i][j] = 1; // Normal brick
+                }
             }
         }
         brickWidth = 540 / cols;
@@ -23,7 +30,17 @@ public class BrickManager {
         for (int i = 0; i < bricks.length; i++) {
             for (int j = 0; j < bricks[0].length; j++) {
                 if (bricks[i][j] > 0) {
-                    g.setColor(Color.WHITE);
+                    if (bricks[i][j] == 2) {
+                        g.setColor(Color.RED); // Strong bricks are red
+                    } else {
+                        g.setColor(Color.WHITE); // Normal bricks are white
+                    }
+                    g.fillRect(j * brickWidth + 80, i * brickHeight + 50, brickWidth, brickHeight);
+                    g.setStroke(new BasicStroke(3));
+                    g.setColor(Color.BLACK);
+                    g.drawRect(j * brickWidth + 80, i * brickHeight + 50, brickWidth, brickHeight);
+                } else if (bricks[i][j] == -1) {
+                    g.setColor(Color.GRAY); // Obstacles are gray
                     g.fillRect(j * brickWidth + 80, i * brickHeight + 50, brickWidth, brickHeight);
                     g.setStroke(new BasicStroke(3));
                     g.setColor(Color.BLACK);
@@ -33,7 +50,13 @@ public class BrickManager {
         }
     }
 
-    public void setBrick(int value, int row, int col) {
-        bricks[row][col] = value;
+    public void hitBrick(int row, int col) {
+        if (row >= 0 && row < bricks.length && col >= 0 && col < bricks[0].length) {
+            if (bricks[row][col] > 1) {
+                bricks[row][col]--; // Reduce strength if it’s a strong brick
+            } else if (bricks[row][col] == 1) {
+                bricks[row][col] = 0; // Destroy the normal brick
+            } // obstacles are indestructible
+        }
     }
 }
