@@ -22,8 +22,8 @@ public class BrickManager {
                 }
             }
         }
-        brickWidth = 540 / cols;
-        brickHeight = 150 / rows;
+        brickWidth = 700 / cols;
+        brickHeight = 200 / rows;
     }
 
     public void draw(Graphics2D g) {
