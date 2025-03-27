@@ -29,6 +29,12 @@ public class BrickManager {
                 }
             }
         }
+
+        // for testing...
+        // bricks[0][0] = 1;
+        // bricks[0][1] = 999;
+        // for testing... ---thisizaro.
+
         brickWidth = 700 / cols;
         brickHeight = 200 / rows;
     }
@@ -83,10 +89,26 @@ public class BrickManager {
         }
     }
 
+    public int bricksRemaining() {
+        int count = 0;
+        for (int i = 0; i < bricks.length; i++) {
+            for (int j = 0; j < bricks[0].length; j++) {
+                if (bricks[i][j] > 0 && bricks[i][j] < 10) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
+
     public void hitBrick(int row, int col) {
         if (row >= 0 && row < bricks.length && col >= 0 && col < bricks[0].length) {
             if (bricks[row][col] > 1) {
                 bricks[row][col]--; // Reduce strength if it’s a strong brick
+
+                if (bricks[row][col] == 998) {
+                    bricks[row][col] = 999; // Brick is an obstacle
+                }
             } else if (bricks[row][col] == 1) {
                 bricks[row][col] = 0; // Destroy the normal brick
             } // obstacles are indestructible

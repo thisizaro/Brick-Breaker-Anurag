@@ -3,22 +3,51 @@
 package brickBreaker;
 
 import javax.swing.*;
-import javax.swing.Timer;
+
 import java.awt.*;
 import java.awt.event.*;
 
 public class GamePanel extends JPanel implements KeyListener, ActionListener {
 
+    // Window constants
+    private static final int WINDOW_WIDTH = 900;
+    private static final int WINDOW_HEIGHT = 700;
+
+    // Paddle constants
+    private static final int PADDLE_WIDTH = 120;
+    private static final int PADDLE_HEIGHT = 10;
+    private static final int PADDLE_Y = 600;
+    private static final int PADDLE_MOVE_STEP = 20;
+
+    // Ball constants
+    private static final int BALL_SIZE = 20;
+    private static final int BALL_START_X = 220;
+    private static final int BALL_START_Y = 450;
+    private static final int BALL_SPEED_X = -1;
+    private static final int BALL_SPEED_Y = -2;
+
+    // Brick Layout
+    // for testing purpose... I will set the number of rows and columns to 1 and 2
+    // private static final int BRICK_ROWS = 1;
+    // private static final int BRICK_COLUMNS = 2;
+    private static final int BRICK_ROWS = 6;
+    private static final int BRICK_COLUMNS = 10;
+
+    // Game state
     private boolean isPlaying = false;
     private int currentScore = 0;
-    private int bricksRemaining = 6 * 10;
+    private int bricksRemaining = BRICK_ROWS * BRICK_COLUMNS;
     private Timer gameTimer;
     private int speed = 8;
-    private int paddleX = 400;
-    private int ballX = 220;
-    private int ballY = 450;
-    private int ballXSpeed = -1;
-    private int ballYSpeed = -2;
+
+    // Paddle and ball positions
+    private int paddleX = WINDOW_WIDTH / 2 - PADDLE_WIDTH / 2;
+    private int ballX = BALL_START_X;
+    private int ballY = BALL_START_Y;
+    private int ballXSpeed = BALL_SPEED_X;
+    private int ballYSpeed = BALL_SPEED_Y;
+
+    // Brick manager
     private BrickManager brickLayout;
 
     public GamePanel() {
@@ -36,11 +65,12 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
          * the window size is 900x700 for now but it is creating an issue in the
          * actionPerformed function since it has some other value... Fix the issue...
          */
-        brickLayout = new BrickManager(6, 10);
+        brickLayout = new BrickManager(BRICK_ROWS, BRICK_COLUMNS);
+        bricksRemaining = brickLayout.bricksRemaining();
         addKeyListener(this);
         setFocusable(true);
         setFocusTraversalKeysEnabled(false);
-        setPreferredSize(new Dimension(900, 700));
+        setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
         gameTimer = new Timer(speed, this);
         gameTimer.start();
     }
@@ -48,16 +78,16 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     public void paint(Graphics g) {
         // Background
         g.setColor(Color.BLACK);
-        g.fillRect(1, 1, 900, 700);
+        g.fillRect(1, 1, WINDOW_WIDTH, WINDOW_HEIGHT);
 
         // Draw bricks
         brickLayout.draw((Graphics2D) g);
 
         // Borders
         g.setColor(Color.WHITE);
-        g.fillRect(0, 0, 3, 700);
-        g.fillRect(0, 0, 900, 3);
-        g.fillRect(899, 0, 3, 700);
+        g.fillRect(0, 0, 3, WINDOW_HEIGHT);
+        g.fillRect(0, 0, WINDOW_WIDTH, 3);
+        g.fillRect(WINDOW_WIDTH - 1, 0, 3, WINDOW_HEIGHT);
 
         // Score Display
         g.setColor(Color.WHITE);
@@ -65,13 +95,17 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         g.drawString("Score: ", 600, 30);
         g.drawString("" + currentScore, 700, 30);
 
+        // To Win Display (Remaining bricks)
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        g.drawString("To Win: " + bricksRemaining, 300, 30);
+
         // Paddle
         g.setColor(Color.GREEN);
-        g.fillRect(paddleX, 600, 120, 10);
+        g.fillRect(paddleX, PADDLE_Y, PADDLE_WIDTH, PADDLE_HEIGHT);
 
         // Ball
         g.setColor(Color.RED);
-        g.fillOval(ballX, ballY, 20, 20);
+        g.fillOval(ballX, ballY, BALL_SIZE, BALL_SIZE);
 
         // Game won scenario
         if (bricksRemaining <= 0) {
@@ -88,7 +122,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         }
 
         // Game over scenario
-        if (ballY > 670) {
+        if (ballY > WINDOW_HEIGHT - 30) {
             isPlaying = false;
             ballXSpeed = 0;
             ballYSpeed = 0;
@@ -98,7 +132,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
             g.drawString("Score: " + currentScore, 350, 400);
 
             g.setFont(new Font("Arial", Font.BOLD, 20));
-            g.drawString("Press Enter to Restart", 330, 450);
+            g.drawString("Press Enter to Restart", 310, 450);
         }
 
         g.dispose();
@@ -108,13 +142,12 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     public void actionPerformed(ActionEvent e) {
         gameTimer.start();
         if (isPlaying) {
-            if (new Rectangle(ballX, ballY, 20, 20).intersects(new Rectangle(paddleX, 600, 120, 10))) {
+            if (new Rectangle(ballX, ballY, BALL_SIZE, BALL_SIZE)
+                    .intersects(new Rectangle(paddleX, PADDLE_Y, PADDLE_WIDTH, PADDLE_HEIGHT))) {
                 ballYSpeed = -ballYSpeed;
             }
             for (int i = 0; i < brickLayout.bricks.length; i++) {
                 for (int j = 0; j < brickLayout.bricks[0].length; j++) {
-                    // I added the part to check or(is it -1) to check if it is an obstacle ---
-                    // thisizaro
                     if (brickLayout.bricks[i][j] > 0) {
                         int brickX = j * brickLayout.brickWidth + 80;
                         int brickY = i * brickLayout.brickHeight + 50;
@@ -122,7 +155,7 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                         int brickH = brickLayout.brickHeight;
 
                         Rectangle brickRect = new Rectangle(brickX, brickY, brickW, brickH);
-                        Rectangle ballRect = new Rectangle(ballX, ballY, 20, 20);
+                        Rectangle ballRect = new Rectangle(ballX, ballY, BALL_SIZE, BALL_SIZE);
 
                         if (ballRect.intersects(brickRect)) {
                             if (brickLayout.bricks[i][j] != -1) { // Not an obstacle
@@ -131,22 +164,25 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
                                     bricksRemaining--;
                                     currentScore += 5;
                                 }
+
                             }
 
-                            if (ballX + 19 <= brickRect.x || ballX + 1 >= brickRect.x + brickRect.width) {
+                            if (ballX + BALL_SIZE - 1 <= brickRect.x || ballX + 1 >= brickRect.x + brickRect.width) {
                                 ballXSpeed = -ballXSpeed;
                             } else {
                                 ballYSpeed = -ballYSpeed;
                             }
                             ballX += ballXSpeed;
                             ballY += ballYSpeed;
+
                         }
                     }
                 }
             }
             ballX += ballXSpeed;
             ballY += ballYSpeed;
-            if (ballX < 0 || ballX > 670) {
+
+            if (ballX < 0 || ballX > WINDOW_WIDTH - BALL_SIZE) {
                 ballXSpeed = -ballXSpeed;
             }
             if (ballY < 0) {
@@ -163,8 +199,8 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            if (paddleX >= 800) {
-                paddleX = 800;
+            if (paddleX >= WINDOW_WIDTH - PADDLE_WIDTH - 10) {
+                paddleX = WINDOW_WIDTH - PADDLE_WIDTH - 10;
             } else {
                 moveRight();
             }
@@ -179,26 +215,26 @@ public class GamePanel extends JPanel implements KeyListener, ActionListener {
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
             if (!isPlaying) {
                 isPlaying = true;
-                ballX = 220;
-                ballY = 450;
-                ballXSpeed = -1;
-                ballYSpeed = -2;
-                paddleX = 400;
+                ballX = BALL_START_X;
+                ballY = BALL_START_Y;
+                ballXSpeed = BALL_SPEED_X;
+                ballYSpeed = BALL_SPEED_Y;
+                paddleX = WINDOW_WIDTH / 2 - PADDLE_WIDTH / 2;
                 currentScore = 0;
-                bricksRemaining = 6 * 10;
-                brickLayout = new BrickManager(3, 7);
+                brickLayout = new BrickManager(BRICK_ROWS, BRICK_COLUMNS);
+                bricksRemaining = brickLayout.bricksRemaining();
             }
         }
     }
 
     public void moveRight() {
         isPlaying = true;
-        paddleX += 20;
+        paddleX += PADDLE_MOVE_STEP;
     }
 
     public void moveLeft() {
         isPlaying = true;
-        paddleX -= 20;
+        paddleX -= PADDLE_MOVE_STEP;
     }
 
     @Override
